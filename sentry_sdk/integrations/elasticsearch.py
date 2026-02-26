@@ -85,8 +85,8 @@ def _parse_url(url):
     return operation, index
 
 
-def _get_connection_info(obj, major_version):
-    # type: (Any, int) -> Tuple[Optional[str], Optional[int]]
+def _get_connection_info(obj):
+    # type: (Any) -> Tuple[Optional[str], Optional[int]]
     """Best-effort extraction of server address and port."""
     # v7: Transport has a hosts list of dicts
     try:
@@ -140,7 +140,7 @@ def _patch_perform_request(cls, major_version):
                 span.set_data(SPANDATA.DB_NAME, index)
 
             with capture_internal_exceptions():
-                address, port = _get_connection_info(self, major_version)
+                address, port = _get_connection_info(self)
                 if address:
                     span.set_data(SPANDATA.SERVER_ADDRESS, address)
                 if port:
@@ -199,7 +199,7 @@ def _patch_perform_request_async(cls, major_version):
                 span.set_data(SPANDATA.DB_NAME, index)
 
             with capture_internal_exceptions():
-                address, port = _get_connection_info(self, major_version)
+                address, port = _get_connection_info(self)
                 if address:
                     span.set_data(SPANDATA.SERVER_ADDRESS, address)
                 if port:
