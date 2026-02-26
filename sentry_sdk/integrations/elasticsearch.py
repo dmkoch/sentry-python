@@ -128,49 +128,47 @@ def _patch_perform_request(cls, major_version):
         operation, index = _parse_url(path)
         description = "{} {}".format(method, path)
 
-        span = sentry_sdk.start_span(
+        with sentry_sdk.start_span(
             op=OP.DB,
             name=description,
             origin=ElasticsearchIntegration.origin,
-        )
+        ) as span:
+            span.set_data(SPANDATA.DB_SYSTEM, "elasticsearch")
+            if operation:
+                span.set_data(SPANDATA.DB_OPERATION, operation)
+            if index:
+                span.set_data(SPANDATA.DB_NAME, index)
 
-        span.set_data(SPANDATA.DB_SYSTEM, "elasticsearch")
-        if operation:
-            span.set_data(SPANDATA.DB_OPERATION, operation)
-        if index:
-            span.set_data(SPANDATA.DB_NAME, index)
-
-        with capture_internal_exceptions():
-            address, port = _get_connection_info(self, major_version)
-            if address:
-                span.set_data(SPANDATA.SERVER_ADDRESS, address)
-            if port:
-                span.set_data(SPANDATA.SERVER_PORT, port)
-
-        if should_send_default_pii():
-            body = _get_body(args, kwargs)
-            if body is not None:
-                span.set_data("db.statement.body", body)
-
-        try:
-            result = original(self, method, path, *args, **kwargs)
-            span.set_status(SPANSTATUS.OK)
-        except Exception:
-            span.set_status(SPANSTATUS.INTERNAL_ERROR)
-            raise
-        finally:
             with capture_internal_exceptions():
-                breadcrumb_data = {SPANDATA.DB_SYSTEM: "elasticsearch"}
-                if operation:
-                    breadcrumb_data[SPANDATA.DB_OPERATION] = operation
-                if index:
-                    breadcrumb_data[SPANDATA.DB_NAME] = index
-                sentry_sdk.add_breadcrumb(
-                    message=description,
-                    category="query",
-                    data=breadcrumb_data,
-                )
-            span.finish()
+                address, port = _get_connection_info(self, major_version)
+                if address:
+                    span.set_data(SPANDATA.SERVER_ADDRESS, address)
+                if port:
+                    span.set_data(SPANDATA.SERVER_PORT, port)
+
+            if should_send_default_pii():
+                body = _get_body(args, kwargs)
+                if body is not None:
+                    span.set_data("db.statement.body", body)
+
+            try:
+                result = original(self, method, path, *args, **kwargs)
+                span.set_status(SPANSTATUS.OK)
+            except Exception:
+                span.set_status(SPANSTATUS.INTERNAL_ERROR)
+                raise
+            finally:
+                with capture_internal_exceptions():
+                    breadcrumb_data = {SPANDATA.DB_SYSTEM: "elasticsearch"}
+                    if operation:
+                        breadcrumb_data[SPANDATA.DB_OPERATION] = operation
+                    if index:
+                        breadcrumb_data[SPANDATA.DB_NAME] = index
+                    sentry_sdk.add_breadcrumb(
+                        message=description,
+                        category="query",
+                        data=breadcrumb_data,
+                    )
 
         return result
 
@@ -189,49 +187,47 @@ def _patch_perform_request_async(cls, major_version):
         operation, index = _parse_url(path)
         description = "{} {}".format(method, path)
 
-        span = sentry_sdk.start_span(
+        with sentry_sdk.start_span(
             op=OP.DB,
             name=description,
             origin=ElasticsearchIntegration.origin,
-        )
+        ) as span:
+            span.set_data(SPANDATA.DB_SYSTEM, "elasticsearch")
+            if operation:
+                span.set_data(SPANDATA.DB_OPERATION, operation)
+            if index:
+                span.set_data(SPANDATA.DB_NAME, index)
 
-        span.set_data(SPANDATA.DB_SYSTEM, "elasticsearch")
-        if operation:
-            span.set_data(SPANDATA.DB_OPERATION, operation)
-        if index:
-            span.set_data(SPANDATA.DB_NAME, index)
-
-        with capture_internal_exceptions():
-            address, port = _get_connection_info(self, major_version)
-            if address:
-                span.set_data(SPANDATA.SERVER_ADDRESS, address)
-            if port:
-                span.set_data(SPANDATA.SERVER_PORT, port)
-
-        if should_send_default_pii():
-            body = _get_body(args, kwargs)
-            if body is not None:
-                span.set_data("db.statement.body", body)
-
-        try:
-            result = await original(self, method, path, *args, **kwargs)
-            span.set_status(SPANSTATUS.OK)
-        except Exception:
-            span.set_status(SPANSTATUS.INTERNAL_ERROR)
-            raise
-        finally:
             with capture_internal_exceptions():
-                breadcrumb_data = {SPANDATA.DB_SYSTEM: "elasticsearch"}
-                if operation:
-                    breadcrumb_data[SPANDATA.DB_OPERATION] = operation
-                if index:
-                    breadcrumb_data[SPANDATA.DB_NAME] = index
-                sentry_sdk.add_breadcrumb(
-                    message=description,
-                    category="query",
-                    data=breadcrumb_data,
-                )
-            span.finish()
+                address, port = _get_connection_info(self, major_version)
+                if address:
+                    span.set_data(SPANDATA.SERVER_ADDRESS, address)
+                if port:
+                    span.set_data(SPANDATA.SERVER_PORT, port)
+
+            if should_send_default_pii():
+                body = _get_body(args, kwargs)
+                if body is not None:
+                    span.set_data("db.statement.body", body)
+
+            try:
+                result = await original(self, method, path, *args, **kwargs)
+                span.set_status(SPANSTATUS.OK)
+            except Exception:
+                span.set_status(SPANSTATUS.INTERNAL_ERROR)
+                raise
+            finally:
+                with capture_internal_exceptions():
+                    breadcrumb_data = {SPANDATA.DB_SYSTEM: "elasticsearch"}
+                    if operation:
+                        breadcrumb_data[SPANDATA.DB_OPERATION] = operation
+                    if index:
+                        breadcrumb_data[SPANDATA.DB_NAME] = index
+                    sentry_sdk.add_breadcrumb(
+                        message=description,
+                        category="query",
+                        data=breadcrumb_data,
+                    )
 
         return result
 
